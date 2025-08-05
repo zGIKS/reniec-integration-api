@@ -1,0 +1,477 @@
+basePath: /api/v1
+definitions:
+  appointments.Appointment:
+    properties:
+      appointment_date:
+        type: string
+      attended_by:
+        type: string
+      cancellation_reason:
+        type: string
+      cancelled_by:
+        type: string
+      cancelled_by_type:
+        type: string
+      client_id:
+        type: string
+      created_at:
+        type: string
+      end_time:
+        type: string
+      id:
+        type: string
+      service_id:
+        type: string
+      start_time:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  appointments.CancelAppointmentRequest:
+    properties:
+      cancelled_by:
+        type: string
+      cancelled_by_type:
+        type: string
+      reason:
+        type: string
+    required:
+    - cancelled_by
+    - cancelled_by_type
+    - reason
+    type: object
+  appointments.CreateAppointmentRequest:
+    properties:
+      appointment_date:
+        type: string
+      attended_by:
+        type: string
+      client_id:
+        type: string
+      service_id:
+        type: string
+      start_time:
+        type: string
+    required:
+    - appointment_date
+    - client_id
+    - service_id
+    - start_time
+    type: object
+  catalog.Service:
+    properties:
+      benefits:
+        type: string
+      contraindications:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      duration_minutes:
+        type: integer
+      id:
+        type: string
+      includes:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+      recommended_frequency:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  employees.Employee:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      maternal_surname:
+        type: string
+      name:
+        type: string
+      paternal_surname:
+        type: string
+      phone:
+        type: string
+      role:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  iam.Client:
+    properties:
+      created_at:
+        type: string
+      dni:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      full_name:
+        type: string
+      id:
+        type: string
+      last_name:
+        type: string
+      phone:
+        type: string
+      registration_date:
+        type: string
+      reniec_validated:
+        type: boolean
+      second_last_name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  iam.CreateClientRequest:
+    properties:
+      dni:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      phone:
+        type: string
+      second_last_name:
+        type: string
+    required:
+    - dni
+    - email
+    - first_name
+    - last_name
+    type: object
+  iam.ReniecResponse:
+    properties:
+      document_number:
+        type: string
+      first_last_name:
+        type: string
+      first_name:
+        type: string
+      full_name:
+        type: string
+      second_last_name:
+        type: string
+    type: object
+  iam.ReniecValidationResult:
+    properties:
+      data:
+        $ref: '#/definitions/iam.ReniecResponse'
+      error:
+        type: string
+      is_valid:
+        type: boolean
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: API REST para gestión de citas, catálogo de servicios y clientes con
+    integración RENIEC
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: ACME Backend API
+  version: "1.0"
+paths:
+  /appointments:
+    post:
+      consumes:
+      - application/json
+      description: Create a new appointment with availability validation
+      parameters:
+      - description: Appointment data
+        in: body
+        name: appointment
+        required: true
+        schema:
+          $ref: '#/definitions/appointments.CreateAppointmentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/appointments.Appointment'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create a new appointment
+      tags:
+      - appointments
+  /appointments/{id}/cancel:
+    put:
+      consumes:
+      - application/json
+      description: Cancel an appointment with reason and audit trail
+      parameters:
+      - description: Appointment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Cancellation data
+        in: body
+        name: cancellation
+        required: true
+        schema:
+          $ref: '#/definitions/appointments.CancelAppointmentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Cancel an appointment
+      tags:
+      - appointments
+  /appointments/{id}/cancel-by-client:
+    put:
+      consumes:
+      - application/json
+      description: Cancel an appointment from client side (chat/external)
+      parameters:
+      - description: Appointment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Client DNI and reason
+        in: body
+        name: cancellation
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Cancel appointment by client (for chat integration)
+      tags:
+      - appointments
+  /appointments/{id}/cancel-by-employee:
+    put:
+      consumes:
+      - application/json
+      description: Cancel an appointment from employee/backend side
+      parameters:
+      - description: Appointment ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Employee email and reason
+        in: body
+        name: cancellation
+        required: true
+        schema:
+          additionalProperties:
+            type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Cancel appointment by employee
+      tags:
+      - appointments
+  /clients:
+    get:
+      description: Get a list of all clients
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/iam.Client'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get all clients
+      tags:
+      - clients
+    post:
+      consumes:
+      - application/json
+      description: Create a new client with RENIEC validation
+      parameters:
+      - description: Client data
+        in: body
+        name: client
+        required: true
+        schema:
+          $ref: '#/definitions/iam.CreateClientRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/iam.Client'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create a new client
+      tags:
+      - clients
+  /employees:
+    get:
+      description: Get a list of all employees
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/employees.Employee'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get all employees
+      tags:
+      - employees
+  /employees/{id}:
+    get:
+      description: Get employee details by ID
+      parameters:
+      - description: Employee ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/employees.Employee'
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get employee by ID
+      tags:
+      - employees
+  /reniec/validate/{dni}:
+    get:
+      consumes:
+      - application/json
+      description: Validate if a DNI exists in RENIEC before registration
+      parameters:
+      - description: DNI to validate
+        in: path
+        name: dni
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/iam.ReniecValidationResult'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Validate DNI with RENIEC (for chatbot)
+      tags:
+      - reniec
+  /services:
+    get:
+      description: Get a list of all available services
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/catalog.Service'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get all services
+      tags:
+      - services
+schemes:
+- http
+- https
+swagger: "2.0"
