@@ -58,7 +58,7 @@ func (c *Config) IsDevelopment() bool {
 func Load() (*Config, error) {
 	config := &Config{
 		Server: ServerConfig{
-			Port: getEnv("SERVER_PORT", "8080"),
+			Port: getEnv("PORT", getEnv("SERVER_PORT", "8080")), // Render uses PORT env var
 			Host: getEnv("SERVER_HOST", "0.0.0.0"),
 			Mode: getEnv("GIN_MODE", "debug"),
 		},
@@ -81,7 +81,7 @@ func Load() (*Config, error) {
 		},
 	}
 
-	file, err := os.Open("resources/app.properties")
+	file, err := os.Open("../resources/app.properties")
 	if err != nil {
 		return nil, fmt.Errorf("error opening app.properties: %w", err)
 	}
@@ -103,10 +103,42 @@ func Load() (*Config, error) {
 		value := expandEnvVars(strings.TrimSpace(parts[1]))
 
 		switch key {
-		case "spring.datasource.url":
-			// Parse PostgreSQL URL: jdbc:postgresql://host:port/database
+		case "go.datasource.url":
+			// Parse PostgreSQL URL: postgresql://user:password@host:port/database
 			if strings.Contains(value, "postgresql://") {
-				// Extract from jdbc:postgresql://host:port/database
+				url := strings.TrimPrefix(value, "postgresql://")
+				// Split by @ to separate auth and host parts
+				atIndex := strings.LastIndex(url, "@")
+				if atIndex != -1 {
+					authPart := url[:atIndex]
+					hostPart := url[atIndex+1:]
+					
+					// Parse auth part (user:password)
+					if strings.Contains(authPart, ":") {
+						authParts := strings.SplitN(authPart, ":", 2)
+						config.Database.Username = authParts[0]
+						config.Database.Password = authParts[1]
+					}
+					
+					// Parse host part (host:port/database)
+					parts := strings.Split(hostPart, "/")
+					if len(parts) >= 2 {
+						config.Database.Name = parts[1]
+						hostPort := parts[0]
+						if strings.Contains(hostPort, ":") {
+							hostPortParts := strings.Split(hostPort, ":")
+							config.Database.Host = hostPortParts[0]
+							config.Database.Port = hostPortParts[1]
+						} else {
+							config.Database.Host = hostPort
+							config.Database.Port = "5432"
+						}
+					}
+				}
+			}
+		case "spring.datasource.url":
+			// Legacy support for spring format
+			if strings.Contains(value, "postgresql://") {
 				url := strings.TrimPrefix(value, "jdbc:postgresql://")
 				parts := strings.Split(url, "/")
 				if len(parts) >= 2 {
@@ -118,7 +150,7 @@ func Load() (*Config, error) {
 						config.Database.Port = hostPortParts[1]
 					} else {
 						config.Database.Host = hostPort
-						config.Database.Port = "5432" // default PostgreSQL port
+						config.Database.Port = "5432"
 					}
 				}
 			}

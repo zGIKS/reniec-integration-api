@@ -27,9 +27,23 @@ import (
 	"acme/router"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	// Load .env file (try multiple paths)
+	envPaths := []string{".env", "../../../.env", "./.env"}
+	envLoaded := false
+	for _, path := range envPaths {
+		if err := godotenv.Load(path); err == nil {
+			envLoaded = true
+			break
+		}
+	}
+	if !envLoaded {
+		log.Println("Warning: .env file not found or unable to load, using system environment variables")
+	}
+
 	// Load configuration
 	cfg, err := config.Load()
 	if err != nil {
