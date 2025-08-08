@@ -81,7 +81,18 @@ func Load() (*Config, error) {
 		},
 	}
 
-	file, err := os.Open("../resources/app.properties")
+	// Try multiple paths for app.properties
+	paths := []string{"./resources/app.properties", "../resources/app.properties", "resources/app.properties"}
+	var file *os.File
+	var err error
+	
+	for _, path := range paths {
+		file, err = os.Open(path)
+		if err == nil {
+			break
+		}
+	}
+	
 	if err != nil {
 		return nil, fmt.Errorf("error opening app.properties: %w", err)
 	}
