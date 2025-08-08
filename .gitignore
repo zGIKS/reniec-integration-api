@@ -3,8 +3,7 @@
 *.env
 # Ignore Go build output
 acme-server
-# Ignore dependency files
-src/main/acme/go.sum
+
 # Ignore IDE/editor files
 .vscode/
 *.swp
