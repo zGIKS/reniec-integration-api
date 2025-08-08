@@ -175,7 +175,7 @@ definitions:
       is_valid:
         type: boolean
     type: object
-host: localhost:8080
+host: reniec-integration-api.onrender.com
 info:
   contact:
     email: support@swagger.io
@@ -472,6 +472,5 @@ paths:
       tags:
       - services
 schemes:
-- http
 - https
 swagger: "2.0"
