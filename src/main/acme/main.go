@@ -31,17 +31,18 @@ import (
 )
 
 func main() {
-	// Load .env file (try multiple paths)
+	// Load .env file only in development (optional)
 	envPaths := []string{".env", "../../../.env", "./.env"}
 	envLoaded := false
 	for _, path := range envPaths {
 		if err := godotenv.Load(path); err == nil {
+			log.Printf("Loaded environment from %s", path)
 			envLoaded = true
 			break
 		}
 	}
 	if !envLoaded {
-		log.Println("Warning: .env file not found or unable to load, using system environment variables")
+		log.Println("Using system environment variables (production mode)")
 	}
 
 	// Load configuration

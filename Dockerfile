@@ -32,8 +32,8 @@ COPY --from=builder /app/acme-server ./
 RUN mkdir -p resources
 COPY src/main/resources/app.properties ./resources/app.properties
 
-# Copy .env file for environment configuration
-COPY .env ./
+# Environment variables will be provided by Render
+# No need to copy .env file in production
 
 # Expose port (will be overridden by Render's PORT env var)
 EXPOSE 8080
