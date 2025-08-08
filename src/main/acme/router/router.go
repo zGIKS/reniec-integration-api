@@ -10,22 +10,23 @@ import (
 )
 
 func SetupRoutes(r *gin.Engine, handlers *catalog.AppHandlers, cfg *config.Config) {
-
-	// Add CORS middleware if enabled
-	if cfg.App.EnableCORS {
-		r.Use(func(c *gin.Context) {
-			c.Header("Access-Control-Allow-Origin", "*")
-			c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-			c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
-			
-			if c.Request.Method == "OPTIONS" {
-				c.AbortWithStatus(204)
-				return
-			}
-			
-			c.Next()
-		})
-	}
+	
+	// Global CORS middleware - always enabled for production
+	r.Use(func(c *gin.Context) {
+		c.Header("Access-Control-Allow-Origin", "*")
+		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD")
+		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, Accept, X-Requested-With, Access-Control-Request-Method, Access-Control-Request-Headers")
+		c.Header("Access-Control-Expose-Headers", "Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Content-Type")
+		c.Header("Access-Control-Max-Age", "86400")
+		
+		// Handle preflight OPTIONS requests
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+		
+		c.Next()
+	})
 
 	api := r.Group("/api/v1")
 	{
